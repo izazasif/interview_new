@@ -16,8 +16,13 @@ class ProductController extends Controller
      * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Http\Response|\Illuminate\View\View
      */
     public function index()
-    {
-        return view('products.index');
+    {   
+        $data = Product::leftJoin('product_variants', 'products.id', '=', 'product_variants.product_id')
+                         ->leftjoin('product_variant_prices','products.id', '=', 'product_variant_prices.product_id')
+                        ->select('products.id','products.title','products.sku','products.description','product_variants.variant','product_variant_prices.price','product_variant_prices.stock')
+                        ->paginate(10);
+            $data1 = ProductVariant::get();
+        return view('products.index')->with(compact('data','data1'));
     }
 
     /**
@@ -29,6 +34,7 @@ class ProductController extends Controller
     {
         $variants = Variant::all();
         return view('products.create', compact('variants'));
+       
     }
 
     /**
@@ -39,6 +45,12 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
+        $data = new Product();
+        
+        $data->title = $request->title;
+        $data->sku = $request->sku;
+        $data->description = $request->description;
+        $data->save();
 
     }
 
@@ -49,9 +61,28 @@ class ProductController extends Controller
      * @param \App\Models\Product $product
      * @return \Illuminate\Http\Response
      */
-    public function show($product)
-    {
+    public function show(Request $request,$product)
+    {   
+        // dd($request->all());
+        
+          $data1 = ProductVariant::get(); 
 
+            if($request->title != null)
+            {
+                $data = Product::leftJoin('product_variants', 'products.id', '=', 'product_variants.product_id')
+                ->leftjoin('product_variant_prices','products.id', '=', 'product_variant_prices.product_id')
+               ->select('products.id','products.title','products.sku','products.description','product_variants.variant','product_variant_prices.price','product_variant_prices.stock')
+              ->where('products.title', 'LIKE', "%{$request->title}%")->paginate(10);
+            }
+            if($request->variant != null)
+            {
+            $data = Product::leftJoin('product_variants', 'products.id', '=', 'product_variants.product_id')
+                           ->leftjoin('product_variant_prices','products.id', '=', 'product_variant_prices.product_id')
+                          ->select('products.id','products.title','products.sku','products.description','product_variants.variant','product_variant_prices.price','product_variant_prices.stock')
+                         ->where('product_variants.variant', 'LIKE', "%{$request->variant}%")->paginate(10);
+            }
+           
+            return view('products.index',compact('data','data1'));
     }
 
     /**
@@ -61,9 +92,10 @@ class ProductController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function edit(Product $product)
-    {
+    {   
+        
         $variants = Variant::all();
-        return view('products.edit', compact('variants'));
+        return view('products.edit', compact('variants','product'));
     }
 
     /**
@@ -73,9 +105,13 @@ class ProductController extends Controller
      * @param \App\Models\Product $product
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Product $product)
+    public function update(Request $request)
     {
-        //
+        
+        $data = Product::findOrFail($request->id);
+        $data->update($request->all());
+
+        return redirect('/product');
     }
 
     /**
