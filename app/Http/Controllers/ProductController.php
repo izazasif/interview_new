@@ -17,12 +17,12 @@ class ProductController extends Controller
      */
     public function index()
     {   
-        $data = Product::leftJoin('product_variants', 'products.id', '=', 'product_variants.product_id')
+        $data = Product::leftjoin('product_variants','products.id', '=', 'product_variants.product_id')
                          ->leftjoin('product_variant_prices','products.id', '=', 'product_variant_prices.product_id')
-                        ->select('products.id','products.title','products.sku','products.description','product_variants.variant','product_variant_prices.price','product_variant_prices.stock')
+                        ->select('products.*','product_variants.*','product_variant_prices.*')
                         ->paginate(10);
-            $data1 = ProductVariant::get();
-        return view('products.index')->with(compact('data','data1'));
+        // $data = Product::paginate(10);
+        return view('products.index')->with(compact('data'));
     }
 
     /**
@@ -65,24 +65,41 @@ class ProductController extends Controller
     {   
         // dd($request->all());
         
-          $data1 = ProductVariant::get(); 
-
-            if($request->title != null)
+          $min   = $request->price_from;
+          $max =  $request->price_to;
+          $date = $request->date;
+          $search_product = [];
+           if($request->title != null)
             {
-                $data = Product::leftJoin('product_variants', 'products.id', '=', 'product_variants.product_id')
+                $search_product = Product::leftJoin('product_variants', 'products.id', '=', 'product_variants.product_id')
                 ->leftjoin('product_variant_prices','products.id', '=', 'product_variant_prices.product_id')
                ->select('products.id','products.title','products.sku','products.description','product_variants.variant','product_variant_prices.price','product_variant_prices.stock')
               ->where('products.title', 'LIKE', "%{$request->title}%")->paginate(10);
             }
             if($request->variant != null)
             {
-            $data = Product::leftJoin('product_variants', 'products.id', '=', 'product_variants.product_id')
-                           ->leftjoin('product_variant_prices','products.id', '=', 'product_variant_prices.product_id')
-                          ->select('products.id','products.title','products.sku','products.description','product_variants.variant','product_variant_prices.price','product_variant_prices.stock')
-                         ->where('product_variants.variant', 'LIKE', "%{$request->variant}%")->paginate(10);
+            $search_product = Product::leftJoin('product_variants', 'products.id', '=', 'product_variants.product_id')
+                            ->leftjoin('product_variant_prices','products.id', '=', 'product_variant_prices.product_id')
+                             ->select('products.id','products.title','products.sku','products.description','product_variants.variant','product_variant_prices.price','product_variant_prices.stock')
+                             ->where('product_variants.variant', 'LIKE', "%{$request->variant}%")->paginate(10);
             }
-           
-            return view('products.index',compact('data','data1'));
+
+            if( $min!= null && $max!= null)
+            {
+            $search_product = Product::leftJoin('product_variants', 'products.id', '=', 'product_variants.product_id')
+                           ->leftjoin('product_variant_prices','products.id', '=', 'product_variant_prices.product_id')
+                           ->select('products.id','products.title','products.sku','products.description','product_variants.variant','product_variant_prices.price','product_variant_prices.stock')
+                           ->whereBetween('product_variant_prices.price', [$min, $max])->paginate(10);
+            }
+            if( $date != null)
+            {
+            $search_product = Product::leftJoin('product_variants', 'products.id', '=', 'product_variants.product_id')
+                           ->leftjoin('product_variant_prices','products.id', '=', 'product_variant_prices.product_id')
+                           ->select('products.id','products.title','products.sku','products.description','product_variants.variant','product_variant_prices.price','product_variant_prices.stock')
+                           ->whereDate('products.created_at','=',$date)->paginate(10);
+            }
+
+            return view('products.show')->with('search_product', $search_product);
     }
 
     /**

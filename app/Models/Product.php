@@ -11,8 +11,8 @@ class Product extends Model
         'title', 'sku', 'description'
     ];
     
-    // public function productvariant()
-    // {
-    //     return $this->belongsTo('App\ProductVariant');
-    // }
+    public function productvariant()
+    {
+        return $this->hasOne(ProductVariant::class,'product_id');
+    }
 }

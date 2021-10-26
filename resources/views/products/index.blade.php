@@ -81,10 +81,10 @@
                 <div class="card-footer">
              <div class="row justify-content-between">
                 <div class="col-md-6">
-                    <p>Showing 1 to {{ $data->count()}} out of {{ $data->count()}}</p>
+                    <p>Showing 1 to {{ $data->count() }} out of {{ $data->count() }}</p>
                 </div>
                 <div class="col-md-2">
-                {{ $data->links() }}
+                 {{ $data->links() }}
                 </div>
             </div>
         </div>
